@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,12 +38,13 @@ export function ReadingTestClient({ test, userId: _userId }: { test: Test; userI
   const [loading, setLoading] = useState(false);
   const [activePassage, setActivePassage] = useState(0);
   const [highlighted, setHighlighted] = useState("");
+  const handleSubmitRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (submitted) return;
     const t = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) { handleSubmit(); return 0; }
+        if (prev <= 1) { handleSubmitRef.current(); return 0; }
         return prev - 1;
       });
     }, 1000);
@@ -63,6 +64,7 @@ export function ReadingTestClient({ test, userId: _userId }: { test: Test; userI
     setResult(data);
     setLoading(false);
   }
+  handleSubmitRef.current = handleSubmit;
 
   if (result) {
     const totalQ = test.passages.flatMap((p) => p.questions).length;

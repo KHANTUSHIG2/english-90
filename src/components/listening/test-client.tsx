@@ -39,12 +39,13 @@ export function ListeningTestClient({ test, userId: _userId }: { test: Test; use
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
+  const handleSubmitRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (submitted) return;
     const t = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) { handleSubmit(); return 0; }
+        if (prev <= 1) { handleSubmitRef.current(); return 0; }
         return prev - 1;
       });
     }, 1000);
@@ -70,6 +71,8 @@ export function ListeningTestClient({ test, userId: _userId }: { test: Test; use
     }
     setLoading(false);
   }
+
+  handleSubmitRef.current = handleSubmit;
 
   function setAnswer(qId: string, val: string) {
     setAnswers((prev) => ({ ...prev, [qId]: val }));
