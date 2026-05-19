@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String?
+  role             String    @default("STUDENT")
+  targetBand       Float?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  accounts           Account[]
+  sessions           Session[]
+  listeningAttempts  ListeningAttempt[]
+  readingAttempts    ReadingAttempt[]
+  writingSubmissions WritingSubmission[]
+  vocabularyProgress VocabularyProgress[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model ListeningTest {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  audioUrl    String
+  duration    Int      @default(1800)
+  difficulty  String   @default("MEDIUM")
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sections ListeningSection[]
+  attempts ListeningAttempt[]
+}
+
+model ListeningSection {
+  id          String  @id @default(cuid())
+  testId      String
+  sectionNum  Int
+  title       String?
+  description String?
+
+  test      ListeningTest      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questions ListeningQuestion[]
+}
+
+model ListeningQuestion {
+  id             String  @id @default(cuid())
+  sectionId      String
+  questionNum    Int
+  type           String
+  prompt         String
+  options        String?
+  correctAnswer  String
+  audioTimestamp Int?
+  explanation    String?
+
+  section ListeningSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+}
+
+model ListeningAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  testId      String
+  answers     String
+  score       Int?
+  bandScore   Float?
+  completedAt DateTime @default(now())
+
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test ListeningTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+}
+
+model ReadingTest {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  testType    String   @default("ACADEMIC")
+  duration    Int      @default(3600)
+  difficulty  String   @default("MEDIUM")
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  passages ReadingPassage[]
+  attempts ReadingAttempt[]
+}
+
+model ReadingPassage {
+  id         String @id @default(cuid())
+  testId     String
+  passageNum Int
+  title      String
+  content    String
+
+  test      ReadingTest      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questions ReadingQuestion[]
+}
+
+model ReadingQuestion {
+  id            String  @id @default(cuid())
+  passageId     String
+  questionNum   Int
+  type          String
+  prompt        String
+  options       String?
+  correctAnswer String
+  explanation   String?
+
+  passage ReadingPassage @relation(fields: [passageId], references: [id], onDelete: Cascade)
+}
+
+model ReadingAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  testId      String
+  answers     String
+  score       Int?
+  bandScore   Float?
+  completedAt DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test ReadingTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+}
+
+model WritingTopic {
+  id           String   @id @default(cuid())
+  taskType     String
+  category     String
+  title        String
+  prompt       String
+  imageUrl     String?
+  sampleAnswer String?
+  difficulty   String   @default("MEDIUM")
+  isPublished  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  submissions WritingSubmission[]
+}
+
+model WritingSubmission {
+  id                String   @id @default(cuid())
+  userId            String
+  topicId           String
+  essayText         String
+  wordCount         Int
+  overallBand       Float?
+  taskAchievement   Float?
+  coherenceCohesion Float?
+  lexicalResource   Float?
+  grammarAccuracy   Float?
+  aiFeedback        String?
+  teacherFeedback   String?
+  submittedAt       DateTime @default(now())
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic WritingTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+}
+
+model VocabularyWord {
+  id           String   @id @default(cuid())
+  word         String
+  definition   String
+  example      String
+  category     String
+  audioUrl     String?
+  collocations String?
+  createdAt    DateTime @default(now())
+
+  progress VocabularyProgress[]
+}
+
+model VocabularyProgress {
+  id       String   @id @default(cuid())
+  userId   String
+  wordId   String
+  mastered Boolean  @default(false)
+  reviewAt DateTime @default(now())
+
+  user User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, wordId])
+}
+
+model GrammarLesson {
+  id        String   @id @default(cuid())
+  title     String
+  category  String
+  content   String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
