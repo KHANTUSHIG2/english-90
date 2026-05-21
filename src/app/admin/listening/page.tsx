@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NewListeningTestForm } from "@/components/admin/new-listening-form";
+import { BulkListeningImport } from "@/components/admin/bulk-listening-import";
 
 export default async function AdminListeningPage() {
   const session = await getServerSession(authOptions);
@@ -28,16 +29,22 @@ export default async function AdminListeningPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Form */}
-        <div>
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Add New Test</h2>
-          <NewListeningTestForm />
+        {/* Left column: add one + bulk import */}
+        <div className="space-y-8">
+          <div>
+            <h2 className="text-lg font-semibold text-text-primary mb-4">Add Single Test</h2>
+            <NewListeningTestForm />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-text-primary mb-4">Bulk Import (JSON)</h2>
+            <BulkListeningImport />
+          </div>
         </div>
 
         {/* Test list */}
         <div>
           <h2 className="text-lg font-semibold text-text-primary mb-4">Existing Tests ({tests.length})</h2>
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[80vh] overflow-y-auto pr-1">
             {tests.map((test) => (
               <Card key={test.id}>
                 <CardContent className="p-4">
@@ -59,7 +66,7 @@ export default async function AdminListeningPage() {
               </Card>
             ))}
             {tests.length === 0 && (
-              <p className="text-text-secondary text-sm">No tests yet. Create your first test above.</p>
+              <p className="text-text-secondary text-sm">No tests yet.</p>
             )}
           </div>
         </div>
