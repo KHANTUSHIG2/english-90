@@ -221,14 +221,20 @@ export function ListeningTestClient({ test, userId: _userId }: { test: Test; use
                 Answers — Part {currentSection.sectionNum}
               </p>
               <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
-                {currentSection.questions.map((q) => (
-                  <AnswerInput
-                    key={q.id}
-                    question={q}
-                    value={answers[q.id] ?? ""}
-                    onChange={(v) => setAnswer(q.id, v)}
-                  />
-                ))}
+                {(() => {
+                  const offset = test.sections
+                    .slice(0, activeSection)
+                    .reduce((sum, s) => sum + s.questions.length, 0);
+                  return currentSection.questions.map((q, i) => (
+                    <AnswerInput
+                      key={q.id}
+                      question={q}
+                      qNum={offset + i + 1}
+                      value={answers[q.id] ?? ""}
+                      onChange={(v) => setAnswer(q.id, v)}
+                    />
+                  ));
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -306,8 +312,9 @@ function QuestionList({ questions }: { questions: Question[] }) {
 }
 
 /* ── Answer input for the right panel ── */
-function AnswerInput({ question, value, onChange }: {
+function AnswerInput({ question, qNum, value, onChange }: {
   question: Question;
+  qNum: number;
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -316,7 +323,7 @@ function AnswerInput({ question, value, onChange }: {
   return (
     <div className="flex items-start gap-2">
       <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary-50 text-primary text-xs font-bold shrink-0 mt-1">
-        {question.questionNum}
+        {qNum}
       </span>
       <div className="flex-1 min-w-0">
         {options ? (
