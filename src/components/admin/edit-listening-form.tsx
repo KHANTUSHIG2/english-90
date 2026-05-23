@@ -49,8 +49,12 @@ interface TestData {
 
 const LETTERS_KEYS = ["mcqA", "mcqB", "mcqC", "mcqD"] as const;
 
-function blankSlot(num: number): AnswerSlot {
-  return { questionNum: num, type: "FILL_BLANK", correctAnswer: "", correctAnswer2: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
+function blankSlot(): AnswerSlot {
+  return { questionNum: 0, type: "FILL_BLANK", correctAnswer: "", correctAnswer2: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
+}
+
+function getOffset(parts: Part[], pIdx: number): number {
+  return parts.slice(0, pIdx).reduce((sum, p) => sum + p.slots.length, 0);
 }
 
 function parseSlot(q: TestData["sections"][0]["questions"][0]): AnswerSlot {
@@ -103,7 +107,7 @@ export function EditListeningForm({ test }: { test: TestData }) {
       imageUrl: s.imageUrl ?? "",
       slots: s.questions.length > 0
         ? s.questions.map(parseSlot)
-        : Array.from({ length: 10 }, (_, i) => blankSlot(i + 1)),
+        : [blankSlot(), blankSlot()],
     }))
   );
   const [loading, setLoading] = useState(false);
@@ -125,7 +129,7 @@ export function EditListeningForm({ test }: { test: TestData }) {
   function addSlot(pIdx: number) {
     setParts((prev) => {
       const u = [...prev];
-      u[pIdx].slots = [...u[pIdx].slots, blankSlot(u[pIdx].slots.length + 1)];
+      u[pIdx].slots = [...u[pIdx].slots, blankSlot()];
       return u;
     });
   }
@@ -143,28 +147,32 @@ export function EditListeningForm({ test }: { test: TestData }) {
     if (!title || !mainAudioUrl) { setError("Title and audio URL are required."); return; }
     setLoading(true); setError(""); setSuccess("");
 
-    const sections = parts.map((p) => ({
-      sectionNum: p.sectionNum,
-      audioUrl: p.audioUrl || null,
-      imageUrl: p.imageUrl || null,
-      passage: null,
-      title: null,
-      questions: p.slots
-        .filter((s) => s.type === "MCQ" ? s.correctLetter : s.correctAnswer)
-        .map((s) => ({
-          questionNum: s.questionNum,
-          type: s.type,
-          title: null,
-          prompt: `Question ${s.questionNum}`,
-          options: s.type === "MCQ" ? mcqOptionArray(s) : null,
-          correctAnswer: s.type === "MCQ"
-            ? mcqCorrectAnswer(s)
-            : s.correctAnswer2.trim()
-              ? `${s.correctAnswer.trim()}|${s.correctAnswer2.trim()}`
-              : s.correctAnswer.trim(),
-          explanation: null,
-        })),
-    }));
+    const sections = parts.map((p, pIdx) => {
+      const offset = getOffset(parts, pIdx);
+      return {
+        sectionNum: p.sectionNum,
+        audioUrl: p.audioUrl || null,
+        imageUrl: p.imageUrl || null,
+        passage: null,
+        title: null,
+        questions: p.slots
+          .map((s, sIdx) => ({ s, globalNum: offset + sIdx + 1 }))
+          .filter(({ s }) => s.type === "MCQ" ? s.correctLetter : s.correctAnswer)
+          .map(({ s, globalNum }) => ({
+            questionNum: globalNum,
+            type: s.type,
+            title: null,
+            prompt: `Question ${globalNum}`,
+            options: s.type === "MCQ" ? mcqOptionArray(s) : null,
+            correctAnswer: s.type === "MCQ"
+              ? mcqCorrectAnswer(s)
+              : s.correctAnswer2.trim()
+                ? `${s.correctAnswer.trim()}|${s.correctAnswer2.trim()}`
+                : s.correctAnswer.trim(),
+            explanation: null,
+          })),
+      };
+    });
 
     try {
       const res = await fetch(`/api/admin/listening/${test.id}`, {
@@ -195,8 +203,9 @@ export function EditListeningForm({ test }: { test: TestData }) {
         </CardContent>
       </Card>
 
-      {parts.map((part, pIdx) => (
-        <Card key={pIdx}>
+      {parts.map((part, pIdx) => {
+        const offset = getOffset(parts, pIdx);
+        return (<Card key={pIdx}>
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-base shrink-0">{part.sectionNum}</div>
@@ -229,6 +238,7 @@ export function EditListeningForm({ test }: { test: TestData }) {
                 <SlotRow
                   key={sIdx}
                   slot={slot}
+                  qNum={offset + sIdx + 1}
                   onChange={(field, val) => updateSlot(pIdx, sIdx, field, val)}
                   onRemove={() => removeSlot(pIdx, sIdx)}
                 />
@@ -239,12 +249,12 @@ export function EditListeningForm({ test }: { test: TestData }) {
               + Add Answer Slot
             </Button>
           </CardContent>
-        </Card>
-      ))}
+        </Card>);
+      })}
 
       {parts.length < 4 && (
         <Button type="button" variant="outline" className="w-full"
-          onClick={() => setParts((p) => [...p, { sectionNum: p.length + 1, audioUrl: "", imageUrl: "", slots: [blankSlot(1), blankSlot(2)] }])}>
+          onClick={() => setParts((p) => [...p, { sectionNum: p.length + 1, audioUrl: "", imageUrl: "", slots: [blankSlot(), blankSlot()] }])}>
           + Add Part ({parts.length}/4)
         </Button>
       )}
@@ -256,8 +266,9 @@ export function EditListeningForm({ test }: { test: TestData }) {
   );
 }
 
-function SlotRow({ slot, onChange, onRemove }: {
+function SlotRow({ slot, qNum, onChange, onRemove }: {
   slot: AnswerSlot;
+  qNum: number;
   onChange: (field: keyof AnswerSlot, val: string) => void;
   onRemove: () => void;
 }) {
@@ -265,7 +276,7 @@ function SlotRow({ slot, onChange, onRemove }: {
     <div className="border border-border rounded-xl p-3 bg-white space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
-          {slot.questionNum}
+          {qNum}
         </span>
 
         {/* Type toggle */}
