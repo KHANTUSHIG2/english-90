@@ -44,7 +44,6 @@ export function NewReadingTestForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [testType, setTestType] = useState("ACADEMIC");
-  const [difficulty, setDifficulty] = useState("MEDIUM");
   const [passages, setPassages] = useState<Passage[]>([blankPassage(1)]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -89,7 +88,7 @@ export function NewReadingTestForm() {
       const res = await fetch("/api/admin/reading", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, testType, difficulty, passages }),
+        body: JSON.stringify({ title, description, testType, passages }),
       });
       if (res.ok) {
         setSuccess("Test created!");
@@ -112,12 +111,8 @@ export function NewReadingTestForm() {
         <CardContent className="p-4 space-y-3">
           <Input label="Test Title *" value={title} onChange={(e) => setTitle(e.target.value)} required />
           <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-          <div className="grid grid-cols-2 gap-3">
-            <Select label="Type" value={testType} onChange={(e) => setTestType(e.target.value)}
-              options={[{ value: "ACADEMIC", label: "Academic" }, { value: "GENERAL", label: "General Training" }]} />
-            <Select label="Difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}
-              options={[{ value: "EASY", label: "Easy" }, { value: "MEDIUM", label: "Medium" }, { value: "HARD", label: "Hard" }]} />
-          </div>
+          <Select label="Type" value={testType} onChange={(e) => setTestType(e.target.value)}
+            options={[{ value: "ACADEMIC", label: "Academic" }, { value: "GENERAL", label: "General Training" }]} />
         </CardContent>
       </Card>
 

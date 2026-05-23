@@ -41,9 +41,6 @@ export default async function ListeningListPage() {
                       <div className="text-sm text-text-secondary truncate">{test.description}</div>
                     )}
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant={test.difficulty === "EASY" ? "success" : test.difficulty === "HARD" ? "danger" : "warning"}>
-                        {test.difficulty}
-                      </Badge>
                       <span className="text-xs text-text-secondary">30 min · 40 questions</span>
                     </div>
                   </div>

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { title, description, testType, difficulty, passages } = await req.json();
+  const { title, description, testType, passages } = await req.json();
 
   if (!title) return NextResponse.json({ error: "Title required." }, { status: 400 });
 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       title,
       description,
       testType: testType ?? "ACADEMIC",
-      difficulty: difficulty ?? "MEDIUM",
+      difficulty: "MEDIUM",
       isPublished: false,
       passages: {
         create: passages.map((p: any) => ({

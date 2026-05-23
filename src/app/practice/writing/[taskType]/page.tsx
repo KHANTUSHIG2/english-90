@@ -325,11 +325,6 @@ export default async function WritingTopicListPage({ params }: { params: { taskT
                               {topic.title}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
-                              <Badge
-                                variant={topic.difficulty === "EASY" ? "success" : topic.difficulty === "HARD" ? "danger" : "warning"}
-                              >
-                                {topic.difficulty}
-                              </Badge>
                               {topic.imageUrl && <Badge variant="info">Has image</Badge>}
                             </div>
                           </div>

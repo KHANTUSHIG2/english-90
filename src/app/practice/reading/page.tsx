@@ -41,9 +41,6 @@ export default async function ReadingListPage() {
                     )}
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant="info">{test.testType}</Badge>
-                      <Badge variant={test.difficulty === "EASY" ? "success" : test.difficulty === "HARD" ? "danger" : "warning"}>
-                        {test.difficulty}
-                      </Badge>
                       <span className="text-xs text-text-secondary">60 min · 40 questions</span>
                     </div>
                   </div>

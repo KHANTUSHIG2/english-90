@@ -11,21 +11,17 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { taskType, category, title, prompt, imageUrl, sampleAnswer, difficulty } = body;
-
-  if (!title || !prompt) {
-    return NextResponse.json({ error: "Title and prompt required." }, { status: 400 });
-  }
+  const { taskType, category, title, prompt, imageUrl, sampleAnswer } = body;
 
   const topic = await db.writingTopic.create({
     data: {
       taskType,
       category,
-      title,
-      prompt,
+      title: title || "",
+      prompt: prompt || "",
       imageUrl: imageUrl || null,
       sampleAnswer: sampleAnswer || null,
-      difficulty: difficulty ?? "MEDIUM",
+      difficulty: "MEDIUM",
       isPublished: true,
     },
   });

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { title, description, audioUrl, difficulty, sections } = await req.json();
+  const { title, description, audioUrl, sections } = await req.json();
 
   if (!title || !audioUrl) {
     return NextResponse.json({ error: "Title and audioUrl are required." }, { status: 400 });
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       title,
       description,
       audioUrl,
-      difficulty: difficulty ?? "MEDIUM",
+      difficulty: "MEDIUM",
       isPublished: false,
       sections: {
         create: sections.map((s: any) => ({

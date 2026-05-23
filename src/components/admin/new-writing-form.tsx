@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
+const TASK1_CATEGORIES = ["Bar Chart", "Line Graph", "Table", "Diagram"];
+const TASK2_CATEGORIES = ["Education", "Environment", "Technology", "Society", "Health", "Economy", "Culture", "Government", "Crime", "Media"];
+
 export function NewWritingTopicForm() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -14,20 +17,27 @@ export function NewWritingTopicForm() {
     prompt: "",
     imageUrl: "",
     sampleAnswer: "",
-    difficulty: "MEDIUM",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   function update(field: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-      setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      setForm((prev) => {
+        const next = { ...prev, [field]: e.target.value };
+        if (field === "taskType") {
+          next.category = e.target.value === "TASK1_ACADEMIC"
+            ? TASK1_CATEGORIES[0]
+            : TASK2_CATEGORIES[0];
+        }
+        return next;
+      });
+    };
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title || !form.prompt) { setError("Title and prompt are required."); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
       const res = await fetch("/api/admin/writing", {
@@ -37,7 +47,7 @@ export function NewWritingTopicForm() {
       });
       if (res.ok) {
         setSuccess("Topic created successfully!");
-        setForm({ taskType: "TASK2", category: "Education", title: "", prompt: "", imageUrl: "", sampleAnswer: "", difficulty: "MEDIUM" });
+        setForm({ taskType: "TASK2", category: "Education", title: "", prompt: "", imageUrl: "", sampleAnswer: "" });
         router.refresh();
       } else {
         const d = await res.json();
@@ -47,7 +57,7 @@ export function NewWritingTopicForm() {
     setLoading(false);
   }
 
-  const categories = ["Education", "Environment", "Technology", "Society", "Health", "Economy", "Culture", "Government", "Crime", "Media"];
+  const categories = form.taskType === "TASK1_ACADEMIC" ? TASK1_CATEGORIES : TASK2_CATEGORIES;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,16 +84,10 @@ export function NewWritingTopicForm() {
               options={categories.map((c) => ({ value: c, label: c }))}
             />
           </div>
-          <Input label="Title (brief summary) *" placeholder="Should university education be free?" value={form.title} onChange={update("title")} required />
-          <Textarea label="Full Prompt *" placeholder="Some people believe that..." value={form.prompt} onChange={update("prompt")} rows={4} required />
-          <Input label="Image URL (Task 1 only)" placeholder="https://..." value={form.imageUrl} onChange={update("imageUrl")} />
-          <Textarea label="Band 9 Sample Answer" placeholder="Model answer..." value={form.sampleAnswer} onChange={update("sampleAnswer")} rows={6} />
-          <Select
-            label="Difficulty"
-            value={form.difficulty}
-            onChange={update("difficulty")}
-            options={[{ value: "EASY", label: "Easy" }, { value: "MEDIUM", label: "Medium" }, { value: "HARD", label: "Hard" }]}
-          />
+          <Input label="Title (optional)" placeholder="e.g. The graph shows CO₂ emissions..." value={form.title} onChange={update("title")} />
+          <Textarea label="Full Prompt (optional)" placeholder="The chart below shows... Summarise the information..." value={form.prompt} onChange={update("prompt")} rows={4} />
+          <Input label="Image URL (Task 1 — optional)" placeholder="https://..." value={form.imageUrl} onChange={update("imageUrl")} />
+          <Textarea label="Band 9 Sample Answer (optional)" placeholder="Model answer..." value={form.sampleAnswer} onChange={update("sampleAnswer")} rows={6} />
         </CardContent>
       </Card>
 
