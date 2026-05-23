@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageUpload } from "@/components/admin/image-upload";
 
 const TASK1_CATEGORIES = [
   { value: "Bar Chart", icon: "▬", desc: "Compare values with bars" },
@@ -130,7 +131,11 @@ export function NewWritingTopicForm() {
 
           <Input label="Title (optional)" placeholder="e.g. The graph shows CO₂ emissions..." value={form.title} onChange={update("title")} />
           <Textarea label="Full Prompt (optional)" placeholder="The chart below shows... Summarise the information..." value={form.prompt} onChange={update("prompt")} rows={4} />
-          <Input label="Image URL (Task 1 — optional)" placeholder="https://..." value={form.imageUrl} onChange={update("imageUrl")} />
+          <ImageUpload
+            value={form.imageUrl}
+            onChange={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))}
+            label="Task Image (optional)"
+          />
           <Textarea label="Band 9 Sample Answer (optional)" placeholder="Model answer..." value={form.sampleAnswer} onChange={update("sampleAnswer")} rows={6} />
         </CardContent>
       </Card>
