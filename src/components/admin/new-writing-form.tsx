@@ -9,7 +9,11 @@ const TASK1_CATEGORIES = [
   { value: "Bar Chart", icon: "▬", desc: "Compare values with bars" },
   { value: "Line Graph", icon: "📈", desc: "Show trends over time" },
   { value: "Table", icon: "⊞", desc: "Rows and columns of data" },
-  { value: "Diagram", icon: "⬡", desc: "Process or map diagram" },
+  { value: "Pie Chart", icon: "◑", desc: "Show proportions / percentages" },
+  { value: "Map", icon: "🗺", desc: "Geographical or layout map" },
+  { value: "Process", icon: "⟳", desc: "Steps or stages in a process" },
+  { value: "Diagram", icon: "⬡", desc: "Technical or visual diagram" },
+  { value: "Combination", icon: "⧉", desc: "Two or more chart types" },
 ];
 const TASK2_CATEGORIES = ["Education", "Environment", "Technology", "Society", "Health", "Economy", "Culture", "Government", "Crime", "Media"];
 
