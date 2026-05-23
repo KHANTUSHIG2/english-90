@@ -69,6 +69,7 @@ export async function PUT(
                   prompt: q.prompt,
                   options: q.options ? JSON.stringify(q.options) : null,
                   correctAnswer: q.correctAnswer,
+                  audioTimestamp: q.audioTimestamp ?? null,
                   explanation: q.explanation ?? null,
                 })),
             },

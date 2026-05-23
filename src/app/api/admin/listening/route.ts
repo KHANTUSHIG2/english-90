@@ -40,6 +40,7 @@ export async function POST(req: Request) {
                 prompt: q.prompt,
                 options: q.options || null,
                 correctAnswer: q.correctAnswer,
+                audioTimestamp: q.audioTimestamp ?? null,
                 explanation: q.explanation || null,
               })),
           },

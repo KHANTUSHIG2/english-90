@@ -12,12 +12,18 @@ interface AnswerSlot {
   questionNum: number;
   type: "FILL_BLANK" | "MCQ";
   label: string;
+  timestamp: string;
   correctAnswer: string;
   mcqA: string;
   mcqB: string;
   mcqC: string;
   mcqD: string;
   correctLetter: string;
+}
+
+function mmssToSeconds(v: string): number | null {
+  const m = v.match(/^(\d+):(\d{2})$/);
+  return m ? parseInt(m[1]) * 60 + parseInt(m[2]) : null;
 }
 
 interface Part {
@@ -28,11 +34,11 @@ interface Part {
 }
 
 function blankSlot(num: number): AnswerSlot {
-  return { questionNum: num, type: "FILL_BLANK", label: "", correctAnswer: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
+  return { questionNum: num, type: "FILL_BLANK", label: "", timestamp: "", correctAnswer: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
 }
 
 function blankPart(num: number): Part {
-  return { sectionNum: num, audioUrl: "", imageUrl: "", slots: Array.from({ length: 10 }, (_, i) => blankSlot(i + 1)) };
+  return { sectionNum: num, audioUrl: "", imageUrl: "", slots: [blankSlot(1), blankSlot(2)] };
 }
 
 function mcqOptionArray(slot: AnswerSlot): string[] {
@@ -106,6 +112,7 @@ export function NewListeningTestForm() {
           prompt: s.label || `Question ${s.questionNum}`,
           options: s.type === "MCQ" ? mcqOptionArray(s) : null,
           correctAnswer: s.type === "MCQ" ? mcqCorrectAnswer(s) : s.correctAnswer,
+          audioTimestamp: mmssToSeconds(s.timestamp),
           explanation: null,
         })),
     }));
@@ -243,13 +250,25 @@ function SlotRow({ slot, onChange, onRemove }: {
           />
         )}
 
+        {/* Optional timestamp */}
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-xs text-text-secondary">⏱</span>
+          <input
+            type="text"
+            placeholder="2:30"
+            value={slot.timestamp}
+            onChange={(e) => onChange("timestamp", e.target.value)}
+            className="w-14 px-2 py-1.5 text-xs border border-border rounded-lg bg-gray-50 focus:outline-none text-center font-mono"
+          />
+        </div>
+
         {/* Optional label */}
         <input
           type="text"
           placeholder="Label (optional)"
           value={slot.label}
           onChange={(e) => onChange("label", e.target.value)}
-          className="w-36 px-2 py-1.5 text-xs border border-border rounded-lg bg-gray-50 focus:outline-none text-text-secondary"
+          className="w-32 px-2 py-1.5 text-xs border border-border rounded-lg bg-gray-50 focus:outline-none text-text-secondary"
         />
 
         <button type="button" onClick={onRemove}

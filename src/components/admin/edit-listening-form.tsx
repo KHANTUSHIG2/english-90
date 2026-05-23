@@ -12,12 +12,23 @@ interface AnswerSlot {
   questionNum: number;
   type: "FILL_BLANK" | "MCQ";
   label: string;
+  timestamp: string;
   correctAnswer: string;
   mcqA: string;
   mcqB: string;
   mcqC: string;
   mcqD: string;
   correctLetter: string;
+}
+
+function secondsToMmss(s: number | null | undefined): string {
+  if (!s) return "";
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function mmssToSeconds(v: string): number | null {
+  const m = v.match(/^(\d+):(\d{2})$/);
+  return m ? parseInt(m[1]) * 60 + parseInt(m[2]) : null;
 }
 
 interface Part {
@@ -42,6 +53,7 @@ interface TestData {
       prompt: string;
       options: string | null;
       correctAnswer: string;
+      audioTimestamp: number | null;
     }>;
   }>;
 }
@@ -49,7 +61,7 @@ interface TestData {
 const LETTERS_KEYS = ["mcqA", "mcqB", "mcqC", "mcqD"] as const;
 
 function blankSlot(num: number): AnswerSlot {
-  return { questionNum: num, type: "FILL_BLANK", label: "", correctAnswer: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
+  return { questionNum: num, type: "FILL_BLANK", label: "", timestamp: "", correctAnswer: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
 }
 
 function parseSlot(q: TestData["sections"][0]["questions"][0]): AnswerSlot {
@@ -67,6 +79,7 @@ function parseSlot(q: TestData["sections"][0]["questions"][0]): AnswerSlot {
     questionNum: q.questionNum,
     type: isMCQ ? "MCQ" : "FILL_BLANK",
     label: q.title ?? "",
+    timestamp: secondsToMmss(q.audioTimestamp),
     correctAnswer: isMCQ ? "" : q.correctAnswer,
     mcqA: texts[0] ?? "",
     mcqB: texts[1] ?? "",
@@ -156,6 +169,7 @@ export function EditListeningForm({ test }: { test: TestData }) {
           prompt: s.label || `Question ${s.questionNum}`,
           options: s.type === "MCQ" ? mcqOptionArray(s) : null,
           correctAnswer: s.type === "MCQ" ? mcqCorrectAnswer(s) : s.correctAnswer,
+          audioTimestamp: mmssToSeconds(s.timestamp),
           explanation: null,
         })),
     }));
@@ -238,7 +252,7 @@ export function EditListeningForm({ test }: { test: TestData }) {
 
       {parts.length < 4 && (
         <Button type="button" variant="outline" className="w-full"
-          onClick={() => setParts((p) => [...p, { sectionNum: p.length + 1, audioUrl: "", imageUrl: "", slots: Array.from({ length: 10 }, (_, i) => blankSlot(i + 1)) }])}>
+          onClick={() => setParts((p) => [...p, { sectionNum: p.length + 1, audioUrl: "", imageUrl: "", slots: [blankSlot(1), blankSlot(2)] }])}>
           + Add Part ({parts.length}/4)
         </Button>
       )}
@@ -286,12 +300,25 @@ function SlotRow({ slot, onChange, onRemove }: {
           />
         )}
 
+        {/* Optional timestamp */}
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-xs text-text-secondary">⏱</span>
+          <input
+            type="text"
+            placeholder="2:30"
+            value={slot.timestamp}
+            onChange={(e) => onChange("timestamp", e.target.value)}
+            className="w-14 px-2 py-1.5 text-xs border border-border rounded-lg bg-gray-50 focus:outline-none text-center font-mono"
+          />
+        </div>
+
+        {/* Optional label */}
         <input
           type="text"
           placeholder="Label (optional)"
           value={slot.label}
           onChange={(e) => onChange("label", e.target.value)}
-          className="w-36 px-2 py-1.5 text-xs border border-border rounded-lg bg-gray-50 focus:outline-none text-text-secondary"
+          className="w-32 px-2 py-1.5 text-xs border border-border rounded-lg bg-gray-50 focus:outline-none text-text-secondary"
         />
 
         <button type="button" onClick={onRemove}
