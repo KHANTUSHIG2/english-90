@@ -58,9 +58,14 @@ export default async function AdminDashboard() {
           <h1 className="text-2xl font-bold text-text-primary">Admin Dashboard</h1>
           <p className="text-text-secondary">Welcome, {session.user.name ?? session.user.email}</p>
         </div>
-        <Link href="/dashboard" className="text-sm text-primary hover:underline">
-          Student View
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/admin/settings" className="text-sm text-text-secondary hover:text-primary">
+            Settings
+          </Link>
+          <Link href="/dashboard" className="text-sm text-primary hover:underline">
+            Student View
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
