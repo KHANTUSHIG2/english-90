@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NewListeningTestForm } from "@/components/admin/new-listening-form";
 import { BulkListeningImport } from "@/components/admin/bulk-listening-import";
+import { DeleteTestButton } from "@/components/admin/delete-test-button";
+import { PencilIcon } from "lucide-react";
 
 export default async function AdminListeningPage() {
   const session = await getServerSession(authOptions);
@@ -60,7 +62,15 @@ export default async function AdminListeningPage() {
                         </span>
                       </div>
                     </div>
-                    <PublishButton testId={test.id} isPublished={test.isPublished} />
+                    <div className="flex gap-2 shrink-0">
+                      <Link href={`/admin/listening/${test.id}/edit`}>
+                        <Button size="sm" variant="outline" className="flex items-center gap-1">
+                          <PencilIcon className="w-3 h-3" /> Edit
+                        </Button>
+                      </Link>
+                      <PublishButton testId={test.id} isPublished={test.isPublished} />
+                      <DeleteTestButton testId={test.id} type="listening" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>

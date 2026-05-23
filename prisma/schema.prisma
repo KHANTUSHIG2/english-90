@@ -86,6 +86,9 @@ model ListeningSection {
   sectionNum  Int
   title       String?
   description String?
+  audioUrl    String?
+  passage     String?
+  imageUrl    String?
 
   test      ListeningTest      @relation(fields: [testId], references: [id], onDelete: Cascade)
   questions ListeningQuestion[]
@@ -96,6 +99,7 @@ model ListeningQuestion {
   sectionId      String
   questionNum    Int
   type           String
+  title          String?
   prompt         String
   options        String?
   correctAnswer  String

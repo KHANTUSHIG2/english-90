@@ -27,12 +27,53 @@ interface Part {
   slots: AnswerSlot[];
 }
 
+interface TestData {
+  id: string;
+  title: string;
+  audioUrl: string;
+  sections: Array<{
+    sectionNum: number;
+    audioUrl: string | null;
+    imageUrl: string | null;
+    questions: Array<{
+      questionNum: number;
+      type: string;
+      title: string | null;
+      prompt: string;
+      options: string | null;
+      correctAnswer: string;
+    }>;
+  }>;
+}
+
+const LETTERS_KEYS = ["mcqA", "mcqB", "mcqC", "mcqD"] as const;
+
 function blankSlot(num: number): AnswerSlot {
   return { questionNum: num, type: "FILL_BLANK", label: "", correctAnswer: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
 }
 
-function blankPart(num: number): Part {
-  return { sectionNum: num, audioUrl: "", imageUrl: "", slots: Array.from({ length: 10 }, (_, i) => blankSlot(i + 1)) };
+function parseSlot(q: TestData["sections"][0]["questions"][0]): AnswerSlot {
+  const isMCQ = q.type === "MCQ";
+  let opts: string[] = [];
+  if (isMCQ && q.options) {
+    try { opts = JSON.parse(q.options); } catch { opts = []; }
+  }
+  const texts = opts.map((o) => o.replace(/^[A-D]\.\s*/, ""));
+  const correctLetter = isMCQ
+    ? (q.correctAnswer.match(/^([A-D])\./)?.[1] ?? q.correctAnswer.trim().toUpperCase().charAt(0))
+    : "";
+
+  return {
+    questionNum: q.questionNum,
+    type: isMCQ ? "MCQ" : "FILL_BLANK",
+    label: q.title ?? "",
+    correctAnswer: isMCQ ? "" : q.correctAnswer,
+    mcqA: texts[0] ?? "",
+    mcqB: texts[1] ?? "",
+    mcqC: texts[2] ?? "",
+    mcqD: texts[3] ?? "",
+    correctLetter,
+  };
 }
 
 function mcqOptionArray(slot: AnswerSlot): string[] {
@@ -49,11 +90,20 @@ function mcqCorrectAnswer(slot: AnswerSlot): string {
   return `${slot.correctLetter}. ${text}`;
 }
 
-export function NewListeningTestForm() {
+export function EditListeningForm({ test }: { test: TestData }) {
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [mainAudioUrl, setMainAudioUrl] = useState("");
-  const [parts, setParts] = useState<Part[]>([blankPart(1)]);
+  const [title, setTitle] = useState(test.title);
+  const [mainAudioUrl, setMainAudioUrl] = useState(test.audioUrl);
+  const [parts, setParts] = useState<Part[]>(
+    test.sections.map((s) => ({
+      sectionNum: s.sectionNum,
+      audioUrl: s.audioUrl ?? "",
+      imageUrl: s.imageUrl ?? "",
+      slots: s.questions.length > 0
+        ? s.questions.map(parseSlot)
+        : Array.from({ length: 10 }, (_, i) => blankSlot(i + 1)),
+    }))
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -111,14 +161,13 @@ export function NewListeningTestForm() {
     }));
 
     try {
-      const res = await fetch("/api/admin/listening", {
-        method: "POST",
+      const res = await fetch(`/api/admin/listening/${test.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description: null, audioUrl: mainAudioUrl, sections }),
       });
       if (res.ok) {
-        setSuccess("Test created!");
-        setTitle(""); setMainAudioUrl(""); setParts([blankPart(1)]);
+        setSuccess("Test updated!");
         router.refresh();
       } else {
         const d = await res.json();
@@ -135,7 +184,7 @@ export function NewListeningTestForm() {
 
       <Card>
         <CardContent className="p-4 space-y-3">
-          <Input label="Test Title *" placeholder="e.g. IELTS Practice Test 1" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          <Input label="Test Title *" value={title} onChange={(e) => setTitle(e.target.value)} required />
           <Input label="Main Audio URL *" placeholder="https://..." value={mainAudioUrl} onChange={(e) => setMainAudioUrl(e.target.value)} required />
         </CardContent>
       </Card>
@@ -143,7 +192,6 @@ export function NewListeningTestForm() {
       {parts.map((part, pIdx) => (
         <Card key={pIdx}>
           <CardContent className="p-4">
-            {/* Part header */}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-base shrink-0">{part.sectionNum}</div>
               <div>
@@ -152,9 +200,8 @@ export function NewListeningTestForm() {
               </div>
             </div>
 
-            {/* Audio */}
             <Input
-              label="Part Audio URL (optional — overrides main audio for this part)"
+              label="Part Audio URL (optional)"
               placeholder="https://..."
               value={part.audioUrl}
               onChange={(e) => updatePart(pIdx, "audioUrl", e.target.value)}
@@ -170,7 +217,6 @@ export function NewListeningTestForm() {
               />
             </div>
 
-            {/* Answer slots */}
             <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Answer Slots</p>
             <div className="space-y-2">
               {part.slots.map((slot, sIdx) => (
@@ -192,13 +238,13 @@ export function NewListeningTestForm() {
 
       {parts.length < 4 && (
         <Button type="button" variant="outline" className="w-full"
-          onClick={() => setParts((p) => [...p, blankPart(p.length + 1)])}>
+          onClick={() => setParts((p) => [...p, { sectionNum: p.length + 1, audioUrl: "", imageUrl: "", slots: Array.from({ length: 10 }, (_, i) => blankSlot(i + 1)) }])}>
           + Add Part ({parts.length}/4)
         </Button>
       )}
 
       <Button type="submit" loading={loading} className="w-full" size="lg">
-        Create Listening Test
+        Save Changes
       </Button>
     </form>
   );
@@ -211,14 +257,12 @@ function SlotRow({ slot, onChange, onRemove }: {
 }) {
   return (
     <div className="border border-border rounded-xl p-3 bg-white space-y-2">
-      {/* Row 1: Q number + type toggle + answer/remove */}
       <div className="flex items-center gap-2 flex-wrap">
-        {/* Q number badge */}
         <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
           {slot.questionNum}
         </span>
 
-        {/* Fill / MCQ toggle */}
+        {/* Type toggle */}
         <div className="flex rounded-lg border border-border overflow-hidden shrink-0">
           <button type="button"
             onClick={() => onChange("type", "FILL_BLANK")}
@@ -232,7 +276,6 @@ function SlotRow({ slot, onChange, onRemove }: {
           </button>
         </div>
 
-        {/* Fill answer input */}
         {slot.type === "FILL_BLANK" && (
           <input
             type="text"
@@ -243,7 +286,6 @@ function SlotRow({ slot, onChange, onRemove }: {
           />
         )}
 
-        {/* Optional label */}
         <input
           type="text"
           placeholder="Label (optional)"
@@ -256,11 +298,10 @@ function SlotRow({ slot, onChange, onRemove }: {
           className="ml-auto text-xs text-danger hover:underline shrink-0">✕</button>
       </div>
 
-      {/* Row 2: MCQ options */}
       {slot.type === "MCQ" && (
         <div className="ml-9 space-y-2">
           <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-            {(["mcqA", "mcqB", "mcqC", "mcqD"] as const).map((key, i) => (
+            {LETTERS_KEYS.map((key, i) => (
               <div key={key} className="flex items-center gap-2">
                 <span className={`text-xs font-bold w-5 shrink-0 ${slot.correctLetter === LETTERS[i] ? "text-success" : "text-primary"}`}>
                   {LETTERS[i]}.
@@ -278,7 +319,7 @@ function SlotRow({ slot, onChange, onRemove }: {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-text-secondary">Correct answer:</span>
+            <span className="text-xs font-semibold text-text-secondary">Correct:</span>
             <div className="flex gap-1">
               {LETTERS.map((l) => (
                 <button key={l} type="button"

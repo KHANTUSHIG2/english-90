@@ -8,7 +8,6 @@ const EXAMPLE = JSON.stringify([
   {
     title: "Cambridge IELTS 18 Academic Test 1",
     audioUrl: "https://example.com/audio.mp3",
-    difficulty: "MEDIUM",
     duration: 1800,
     isPublished: true,
     sections: [

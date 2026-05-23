@@ -27,12 +27,16 @@ export async function POST(req: Request) {
         create: sections.map((s: any) => ({
           sectionNum: s.sectionNum,
           title: s.title || null,
+          audioUrl: s.audioUrl || null,
+          imageUrl: s.imageUrl || null,
+          passage: s.passage || null,
           questions: {
             create: s.questions
               .filter((q: any) => q.prompt && q.correctAnswer)
               .map((q: any) => ({
                 questionNum: q.questionNum,
                 type: q.type,
+                title: q.title || null,
                 prompt: q.prompt,
                 options: q.options || null,
                 correctAnswer: q.correctAnswer,
