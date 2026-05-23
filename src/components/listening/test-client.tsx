@@ -196,13 +196,7 @@ export function ListeningTestClient({ test, userId: _userId }: { test: Test; use
         {/* LEFT: image + passage or question prompts */}
         <Card>
           <CardContent className="p-5">
-            {currentSection.imageUrl && (
-              <img
-                src={currentSection.imageUrl}
-                alt="Section diagram"
-                className="w-full rounded-lg border border-border mb-4 object-contain max-h-[520px]"
-              />
-            )}
+            {currentSection.imageUrl && <SectionImages raw={currentSection.imageUrl} />}
             {currentSection.title && (
               <h2 className="text-base font-semibold text-text-primary mb-1">{currentSection.title}</h2>
             )}
@@ -214,7 +208,7 @@ export function ListeningTestClient({ test, userId: _userId }: { test: Test; use
             ) : !currentSection.imageUrl ? (
               <QuestionList questions={currentSection.questions} />
             ) : (
-              <p className="text-xs text-text-secondary italic mt-2">Listen to the audio and fill in your answers on the right →</p>
+              <p className="text-xs text-text-secondary italic mt-2">Listen to the audio and write your answers on the right →</p>
             )}
           </CardContent>
         </Card>
@@ -248,6 +242,26 @@ export function ListeningTestClient({ test, userId: _userId }: { test: Test; use
           ? <Button onClick={() => setActiveSection((p) => p + 1)}>Next Part →</Button>
           : <Button onClick={handleSubmit} loading={loading}>Submit Test</Button>}
       </div>
+    </div>
+  );
+}
+
+/* ── Section images: supports single URL (legacy) or JSON array ── */
+function SectionImages({ raw }: { raw: string }) {
+  let urls: string[] = [];
+  try {
+    const p = JSON.parse(raw);
+    urls = Array.isArray(p) ? p : [raw];
+  } catch {
+    urls = [raw];
+  }
+  if (urls.length === 0) return null;
+  return (
+    <div className={`mb-4 ${urls.length > 1 ? "space-y-3" : ""}`}>
+      {urls.map((url, i) => (
+        <img key={i} src={url} alt={`diagram ${i + 1}`}
+          className="w-full rounded-lg border border-border object-contain max-h-[520px] bg-gray-50" />
+      ))}
     </div>
   );
 }
