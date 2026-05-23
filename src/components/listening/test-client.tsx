@@ -126,7 +126,7 @@ export function ListeningTestClient({ test, userId: _userId }: { test: Test; use
                           <div className="flex-1">
                             <p className="text-sm font-medium text-text-primary mb-1">{q.prompt}</p>
                             <p className="text-xs text-text-secondary">Your answer: <span className={isCorrect ? "text-success font-medium" : "text-danger font-medium"}>{userAns || "(blank)"}</span></p>
-                            {!isCorrect && <p className="text-xs text-success font-medium mt-0.5">Correct: {q.correctAnswer}</p>}
+                            {!isCorrect && <p className="text-xs text-success font-medium mt-0.5">Correct: {q.correctAnswer.replace("|", " or ")}</p>}
                             {q.explanation && <p className="text-xs text-text-secondary mt-1 italic">{q.explanation}</p>}
                           </div>
                         </div>

@@ -11,24 +11,13 @@ const LETTERS = ["A", "B", "C", "D"];
 interface AnswerSlot {
   questionNum: number;
   type: "FILL_BLANK" | "MCQ";
-  label: string;
-  timestamp: string;
   correctAnswer: string;
+  correctAnswer2: string;
   mcqA: string;
   mcqB: string;
   mcqC: string;
   mcqD: string;
   correctLetter: string;
-}
-
-function secondsToMmss(s: number | null | undefined): string {
-  if (!s) return "";
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-}
-
-function mmssToSeconds(v: string): number | null {
-  const m = v.match(/^(\d+):(\d{2})$/);
-  return m ? parseInt(m[1]) * 60 + parseInt(m[2]) : null;
 }
 
 interface Part {
@@ -61,7 +50,7 @@ interface TestData {
 const LETTERS_KEYS = ["mcqA", "mcqB", "mcqC", "mcqD"] as const;
 
 function blankSlot(num: number): AnswerSlot {
-  return { questionNum: num, type: "FILL_BLANK", label: "", timestamp: "", correctAnswer: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
+  return { questionNum: num, type: "FILL_BLANK", correctAnswer: "", correctAnswer2: "", mcqA: "", mcqB: "", mcqC: "", mcqD: "", correctLetter: "" };
 }
 
 function parseSlot(q: TestData["sections"][0]["questions"][0]): AnswerSlot {
@@ -75,12 +64,12 @@ function parseSlot(q: TestData["sections"][0]["questions"][0]): AnswerSlot {
     ? (q.correctAnswer.match(/^([A-D])\./)?.[1] ?? q.correctAnswer.trim().toUpperCase().charAt(0))
     : "";
 
+  const [ans1, ans2] = isMCQ ? ["", ""] : q.correctAnswer.split("|").map(s => s.trim());
   return {
     questionNum: q.questionNum,
     type: isMCQ ? "MCQ" : "FILL_BLANK",
-    label: q.title ?? "",
-    timestamp: secondsToMmss(q.audioTimestamp),
-    correctAnswer: isMCQ ? "" : q.correctAnswer,
+    correctAnswer: ans1 ?? q.correctAnswer,
+    correctAnswer2: ans2 ?? "",
     mcqA: texts[0] ?? "",
     mcqB: texts[1] ?? "",
     mcqC: texts[2] ?? "",
@@ -165,11 +154,14 @@ export function EditListeningForm({ test }: { test: TestData }) {
         .map((s) => ({
           questionNum: s.questionNum,
           type: s.type,
-          title: s.label || null,
-          prompt: s.label || `Question ${s.questionNum}`,
+          title: null,
+          prompt: `Question ${s.questionNum}`,
           options: s.type === "MCQ" ? mcqOptionArray(s) : null,
-          correctAnswer: s.type === "MCQ" ? mcqCorrectAnswer(s) : s.correctAnswer,
-          audioTimestamp: mmssToSeconds(s.timestamp),
+          correctAnswer: s.type === "MCQ"
+            ? mcqCorrectAnswer(s)
+            : s.correctAnswer2.trim()
+              ? `${s.correctAnswer.trim()}|${s.correctAnswer2.trim()}`
+              : s.correctAnswer.trim(),
           explanation: null,
         })),
     }));
@@ -291,35 +283,23 @@ function SlotRow({ slot, onChange, onRemove }: {
         </div>
 
         {slot.type === "FILL_BLANK" && (
-          <input
-            type="text"
-            placeholder="Correct answer *"
-            value={slot.correctAnswer}
-            onChange={(e) => onChange("correctAnswer", e.target.value)}
-            className="flex-1 min-w-[120px] px-3 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light"
-          />
+          <>
+            <input
+              type="text"
+              placeholder="Answer 1 *"
+              value={slot.correctAnswer}
+              onChange={(e) => onChange("correctAnswer", e.target.value)}
+              className="flex-1 min-w-[100px] px-3 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light"
+            />
+            <input
+              type="text"
+              placeholder="Answer 2 (optional)"
+              value={slot.correctAnswer2}
+              onChange={(e) => onChange("correctAnswer2", e.target.value)}
+              className="flex-1 min-w-[100px] px-3 py-1.5 text-sm border border-dashed border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light bg-gray-50"
+            />
+          </>
         )}
-
-        {/* Optional timestamp */}
-        <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs text-text-secondary">⏱</span>
-          <input
-            type="text"
-            placeholder="2:30"
-            value={slot.timestamp}
-            onChange={(e) => onChange("timestamp", e.target.value)}
-            className="w-14 px-2 py-1.5 text-xs border border-border rounded-lg bg-gray-50 focus:outline-none text-center font-mono"
-          />
-        </div>
-
-        {/* Optional label */}
-        <input
-          type="text"
-          placeholder="Label (optional)"
-          value={slot.label}
-          onChange={(e) => onChange("label", e.target.value)}
-          className="w-32 px-2 py-1.5 text-xs border border-border rounded-lg bg-gray-50 focus:outline-none text-text-secondary"
-        />
 
         <button type="button" onClick={onRemove}
           className="ml-auto text-xs text-danger hover:underline shrink-0">✕</button>

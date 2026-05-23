@@ -26,8 +26,8 @@ export async function POST(req: Request) {
 
   for (const q of allQuestions) {
     const userAns = (answers[q.id] ?? "").trim().toLowerCase();
-    const correctAns = q.correctAnswer.trim().toLowerCase();
-    const isCorrect = userAns === correctAns;
+    const acceptedAnswers = q.correctAnswer.split("|").map((a) => a.trim().toLowerCase());
+    const isCorrect = acceptedAnswers.includes(userAns);
     correct[q.id] = isCorrect;
     if (isCorrect) score++;
   }
