@@ -244,8 +244,15 @@ export function WritingEditor({
       <Card className="mb-6">
         <CardContent className="p-6">
           <p className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">Task Prompt</p>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {topic.imageUrl && <img src={topic.imageUrl} alt="Task 1 diagram" className="max-h-64 object-contain mb-4 rounded-lg border border-border" />}
+          {topic.imageUrl && (() => {
+            let urls: string[] = [];
+            try { const p = JSON.parse(topic.imageUrl!); urls = Array.isArray(p) ? p : [topic.imageUrl!]; }
+            catch { urls = [topic.imageUrl!]; }
+            return urls.map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={url} alt={`Task diagram ${i + 1}`} className="w-full max-h-72 object-contain mb-4 rounded-lg border border-border bg-gray-50" />
+            ));
+          })()}
           <p className="text-text-primary leading-relaxed">{topic.prompt}</p>
           <p className="text-xs text-text-secondary mt-3">
             Write at least <strong>{minWords} words</strong> in {formatDuration(timeLimit)}.
