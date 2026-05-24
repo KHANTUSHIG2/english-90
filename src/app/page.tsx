@@ -101,7 +101,7 @@ export default function HomePage() {
           {/* Stats */}
           <div className="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto">
             {[
-              { val: "50,000+", label: "Students" },
+            
               { val: "4.8 / 5", label: "Rating" },
               { val: "Band 7+", label: "Avg. improvement" },
             ].map((s) => (
