@@ -62,19 +62,8 @@ const steps = [
 
 const testimonials = [
   {
-    name: "Aiko T.",
-    band: "Band 8.0",
-    text: "The AI writing feedback helped me understand exactly where I was losing marks. I went from 6.5 to 8.0 in six weeks.",
-  },
-  {
-    name: "Mohammed R.",
-    band: "Band 7.5",
-    text: "The listening tests feel exactly like the real exam. The instant scoring saved me so much revision time.",
-  },
-  {
-    name: "Sofia L.",
-    band: "Band 7.0",
-    text: "Finally a platform that explains WHY my answers are wrong. The reading review is excellent.",
+    name: "khantushig",
+    text: "who made this website — this site is very good",
   },
 ];
 
@@ -269,11 +258,8 @@ export default function HomePage() {
                     ))}
                   </div>
                   <p className="text-text-secondary text-sm leading-relaxed mb-4">"{t.text}"</p>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center">
                     <span className="font-semibold text-text-primary text-sm">{t.name}</span>
-                    <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">
-                      {t.band}
-                    </span>
                   </div>
                 </CardContent>
               </Card>
